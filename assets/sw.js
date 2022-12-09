@@ -1,4 +1,4 @@
-var cacheName = 'tc_pwa';
+var cacheName = 'utca';
 var filesToCache = [
   './',
   './index.html',

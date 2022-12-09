@@ -1,12 +1,16 @@
 name: Continuous deployment
+
 on:
   workflow_run:
     branches: [main]
     workflows: [Continuous integration]
     types: [completed]
 
+permissions:
+  contents: write
+
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -28,28 +32,9 @@ jobs:
     - uses: jetli/trunk-action@v0.1.0
     - uses: jetli/wasm-bindgen-action@v0.1.0
     - name: build
-      run: rustup run nightly trunk build --release
-
-  deploy:
-    needs: build
-    permissions:
-      pages: write
-      id-token: write
-      idToken: write
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/deploy-pages@v1
-
-    # - uses: JamesIves/github-pages-deploy-action@v4
-    #   with:
-    #     folder: dist
-    #     single-commit: true
-    #   with:
-    #     github_token: ${{ secrets.GITHUB_TOKEN }}
-
-    # - name: deploy
-    #   uses: peaceiris/actions-gh-pages@v3
-    #   if: github.ref == 'refs/heads/main'
-    #   with:
-    #     github_token: ${{ secrets.GITHUB_TOKEN }}
-    #     publish_dir: ./dist
+      run: rustup run nightly trunk build --release --public-url "${GITHUB_REPOSITORY#*/}"
+    - name: deploy
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        folder: dist
+        single-commit: true

@@ -1,42 +1,21 @@
-use crate::{output::Output, Taxonomy, Triplet};
+use crate::{output::Output, taxonomy::Specie, Triplet};
 use indexmap::{
     map::{IntoIter, Iter, IterMut},
     IndexMap,
 };
 use itertools::Itertools;
+pub use list::ListWidget;
 use serde::{Deserialize, Serialize};
-use std::{
-    default::default,
-    ops::{Deref, DerefMut},
-};
-pub use widgets::{ListWidget, TableWidget};
+use std::ops::{Deref, DerefMut};
+pub use text::Text;
 
 /// Input
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct Input(IndexMap<Taxonomy, IndexMap<String, Vec<f64>>>);
+pub struct Input(IndexMap<Specie, IndexMap<String, Vec<f64>>>);
 
 impl Input {
-    pub fn new(input: IndexMap<Taxonomy, IndexMap<String, Vec<f64>>>) -> Self {
+    pub fn new(input: IndexMap<Specie, IndexMap<String, Vec<f64>>>) -> Self {
         Self(input)
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
-    pub fn list(&mut self) -> ListWidget {
-        ListWidget {
-            input: self.clone(),
-            ..default()
-        }
-    }
-
-    pub fn table(&self, inverted: bool) -> TableWidget {
-        TableWidget {
-            input: self.clone(),
-            inverted,
-            ..default()
-        }
     }
 
     pub fn output(&self) -> Output {
@@ -44,6 +23,7 @@ impl Input {
             self.0
                 .iter()
                 .map(|(key, value)| {
+                    let key = key.clone();
                     let value = (0..3)
                         .map(|_| value.keys())
                         .multi_cartesian_product()
@@ -54,7 +34,7 @@ impl Input {
                             (key, value)
                         })
                         .collect();
-                    (*key, value)
+                    (key, value)
                 })
                 .collect(),
         )
@@ -69,15 +49,15 @@ impl Input {
             .collect()
     }
 
-    pub fn taxonomies(&self) -> Vec<Taxonomy> {
-        self.0.keys().copied().collect()
+    pub fn species(&self) -> Vec<Specie> {
+        self.0.keys().cloned().collect()
     }
 }
 
 impl IntoIterator for Input {
-    type Item = (Taxonomy, IndexMap<String, Vec<f64>>);
+    type Item = (Specie, IndexMap<String, Vec<f64>>);
 
-    type IntoIter = IntoIter<Taxonomy, IndexMap<String, Vec<f64>>>;
+    type IntoIter = IntoIter<Specie, IndexMap<String, Vec<f64>>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
@@ -85,9 +65,9 @@ impl IntoIterator for Input {
 }
 
 impl<'a> IntoIterator for &'a Input {
-    type Item = (&'a Taxonomy, &'a IndexMap<String, Vec<f64>>);
+    type Item = (&'a Specie, &'a IndexMap<String, Vec<f64>>);
 
-    type IntoIter = Iter<'a, Taxonomy, IndexMap<String, Vec<f64>>>;
+    type IntoIter = Iter<'a, Specie, IndexMap<String, Vec<f64>>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
@@ -95,9 +75,9 @@ impl<'a> IntoIterator for &'a Input {
 }
 
 impl<'a> IntoIterator for &'a mut Input {
-    type Item = (&'a Taxonomy, &'a mut IndexMap<String, Vec<f64>>);
+    type Item = (&'a Specie, &'a mut IndexMap<String, Vec<f64>>);
 
-    type IntoIter = IterMut<'a, Taxonomy, IndexMap<String, Vec<f64>>>;
+    type IntoIter = IterMut<'a, Specie, IndexMap<String, Vec<f64>>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter_mut()
@@ -105,7 +85,7 @@ impl<'a> IntoIterator for &'a mut Input {
 }
 
 impl Deref for Input {
-    type Target = IndexMap<Taxonomy, IndexMap<String, Vec<f64>>>;
+    type Target = IndexMap<Specie, IndexMap<String, Vec<f64>>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -118,4 +98,5 @@ impl DerefMut for Input {
     }
 }
 
-pub mod widgets;
+pub mod list;
+pub mod text;

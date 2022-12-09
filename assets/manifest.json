@@ -1,6 +1,6 @@
 {
-  "name": "TAG Calculation PWA",
-  "short_name": "TC_PWA",
+  "name": "Universal TAG Calculation Application",
+  "short_name": "UTCA",
   "icons": [
     {
       "src": "./icon-256.png",

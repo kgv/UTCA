@@ -1,17 +1,25 @@
-use crate::{config::Sort, Taxonomy, Triplet};
-use indexmap::{map::Iter, IndexMap};
+use crate::{
+    config::{PositionalComposition, Sort},
+    taxonomy::Specie,
+    Triplet,
+};
+use indexmap::{
+    map::{IntoIter, Iter, IterMut},
+    IndexMap,
+};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::{
     default::default,
-    ops::{Bound, Deref},
+    ops::{Bound, Deref, Index},
 };
 pub use widgets::{ListWidget, PlotWidget, TableWidget};
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct Output(IndexMap<Taxonomy, IndexMap<Triplet, f64>>);
+pub struct Output(IndexMap<Specie, IndexMap<Triplet, f64>>);
 
 impl Output {
-    pub fn new(output: IndexMap<Taxonomy, IndexMap<Triplet, f64>>) -> Self {
+    pub fn new(output: IndexMap<Specie, IndexMap<Triplet, f64>>) -> Self {
         Self(output)
     }
 
@@ -24,9 +32,10 @@ impl Output {
     }
 
     pub fn filter<F: Fn(&Triplet, f64) -> bool>(mut self, f: F) -> Self {
-        for value in self.0.values_mut() {
+        self.0.retain(|_, value| {
             value.retain(|key, value| f(key, *value));
-        }
+            !value.is_empty()
+        });
         self
     }
 
@@ -49,6 +58,17 @@ impl Output {
         )
     }
 
+    pub fn positional_composition(
+        self,
+        positional_composition: Option<PositionalComposition>,
+    ) -> Self {
+        match positional_composition {
+            Some(PositionalComposition::Specie) => self.map(Triplet::normalize),
+            Some(PositionalComposition::Type) => self.map(Triplet::normalize),
+            None => self,
+        }
+    }
+
     pub fn positional_species(self) -> Self {
         self.map(Triplet::normalize)
     }
@@ -66,49 +86,52 @@ impl Output {
         }
         self
     }
-}
 
-impl Output {
-    pub fn list(&self) -> ListWidget {
-        ListWidget {
-            data: self.clone(),
-            ..default()
-        }
+    fn species(&self) -> Vec<&Specie> {
+        self.0.keys().collect()
     }
 
-    pub fn table(&self, inverted: bool) -> TableWidget {
-        TableWidget {
-            data: self.0.clone(),
-            inverted,
-            ..default()
-        }
-    }
-
-    pub fn plot(&self, inverted: bool) -> PlotWidget {
-        PlotWidget {
-            data: self.0.clone(),
-            inverted,
-            ..default()
-        }
+    fn triplets(&self) -> Vec<&Triplet> {
+        self.0.values().flat_map(IndexMap::keys).unique().collect()
     }
 }
+
+impl Deref for Output {
+    type Target = IndexMap<Specie, IndexMap<Triplet, f64>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+// impl IntoIterator for Output {
+//     type Item = (Specie, IndexMap<Triplet, f64>);
+
+//     type IntoIter = IntoIter<Specie, IndexMap<Triplet, f64>>;
+
+//     fn into_iter(self) -> Self::IntoIter {
+//         self.0.into_iter()
+//     }
+// }
+
+// impl<'a> IntoIterator for &'a mut Output {
+//     type Item = (&'a Specie, &'a mut IndexMap<Triplet, f64>);
+
+//     type IntoIter = IterMut<'a, Specie, IndexMap<Triplet, f64>>;
+
+//     fn into_iter(self) -> Self::IntoIter {
+//         self.0.iter_mut()
+//     }
+// }
 
 impl<'a> IntoIterator for &'a Output {
-    type Item = (&'a Taxonomy, &'a IndexMap<Triplet, f64>);
+    type Item = (&'a Specie, &'a IndexMap<Triplet, f64>);
 
-    type IntoIter = Iter<'a, Taxonomy, IndexMap<Triplet, f64>>;
+    type IntoIter = Iter<'a, Specie, IndexMap<Triplet, f64>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
     }
 }
-
-// impl Deref for Output {
-//     type Target = IndexMap<Taxonomy, IndexMap<Triplet, f64>>;
-
-//     fn deref(&self) -> &Self::Target {
-//         &self.0
-//     }
-// }
 
 mod widgets;

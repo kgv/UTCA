@@ -7,6 +7,7 @@
 
 use app::App;
 use input::Input;
+use output::Output;
 use taxonomy::Taxonomy;
 use triplet::Triplet;
 use visitor::Visitor;
@@ -35,12 +36,15 @@ fn main() {
     tracing_wasm::set_as_global_default();
 
     let web_options = eframe::WebOptions::default();
-    eframe::start_web(
-        "the_canvas_id", // hardcode it
-        web_options,
-        Box::new(|cc| Box::new(App::new(cc))),
-    )
-    .expect("failed to start eframe");
+    wasm_bindgen_futures::spawn_local(async {
+        eframe::start_web(
+            "the_canvas_id", // hardcode it
+            web_options,
+            Box::new(|cc| Box::new(App::new(cc))),
+        )
+        .await
+        .expect("failed to start eframe");
+    });
 }
 
 pub mod config;
