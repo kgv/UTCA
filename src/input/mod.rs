@@ -1,12 +1,15 @@
-use crate::{output::Output, taxonomy::Specie, Triplet};
+use crate::{Composition, Output, Specie, Tag};
 use indexmap::{
     map::{IntoIter, Iter, IterMut},
     IndexMap,
 };
 use itertools::Itertools;
-pub use list::ListWidget;
+pub use list::List;
 use serde::{Deserialize, Serialize};
-use std::ops::{Deref, DerefMut};
+use std::{
+    iter::once,
+    ops::{Deref, DerefMut},
+};
 pub use text::Text;
 
 /// Input
@@ -28,10 +31,11 @@ impl Input {
                         .map(|_| value.keys())
                         .multi_cartesian_product()
                         .map(|key| {
-                            let key = Triplet([key[0].clone(), key[1].clone(), key[2].clone()]);
+                            let tag = Tag::new([key[0].clone(), key[1].clone(), key[2].clone()]);
                             let value =
-                                value[&key[0]][0] * value[&key[1]][1] * value[&key[2]][0] * 0.0001;
-                            (key, value)
+                                value[&tag[0]][0] * value[&tag[1]][1] * value[&tag[2]][0] * 0.0001;
+                            let composition = once(tag).collect();
+                            (composition, value)
                         })
                         .collect();
                     (key, value)

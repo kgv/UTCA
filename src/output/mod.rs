@@ -1,29 +1,30 @@
 use crate::{
     config::{PositionalComposition, Sort},
-    taxonomy::Specie,
-    Triplet,
+    Composition, Specie,
 };
 use indexmap::{
     map::{IntoIter, Iter, IterMut},
     IndexMap,
 };
 use itertools::Itertools;
+pub use list::List;
+pub use plot::Plot;
 use serde::{Deserialize, Serialize};
 use std::{
     default::default,
     ops::{Bound, Deref, Index},
 };
-pub use widgets::{ListWidget, PlotWidget, TableWidget};
+pub use table::Table;
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct Output(IndexMap<Specie, IndexMap<Triplet, f64>>);
+pub struct Output(IndexMap<Specie, IndexMap<Composition, f64>>);
 
 impl Output {
-    pub fn new(output: IndexMap<Specie, IndexMap<Triplet, f64>>) -> Self {
+    pub fn new(output: IndexMap<Specie, IndexMap<Composition, f64>>) -> Self {
         Self(output)
     }
 
-    pub fn bounded(self, bound: Bound<f64>) -> Self {
+    pub fn bound(self, bound: Bound<f64>) -> Self {
         self.filter(|_, value| match bound {
             Bound::Included(bound) => value >= bound,
             Bound::Excluded(bound) => value > bound,
@@ -31,7 +32,7 @@ impl Output {
         })
     }
 
-    pub fn filter<F: Fn(&Triplet, f64) -> bool>(mut self, f: F) -> Self {
+    pub fn filter<F: Fn(&Composition, f64) -> bool>(mut self, f: F) -> Self {
         self.0.retain(|_, value| {
             value.retain(|key, value| f(key, *value));
             !value.is_empty()
@@ -39,7 +40,7 @@ impl Output {
         self
     }
 
-    pub fn map<F: Fn(Triplet) -> Triplet>(self, f: F) -> Self {
+    pub fn map<F: Fn(Composition) -> Composition>(self, f: F) -> Self {
         Output(
             self.0
                 .into_iter()
@@ -58,25 +59,6 @@ impl Output {
         )
     }
 
-    pub fn positional_composition(
-        self,
-        positional_composition: Option<PositionalComposition>,
-    ) -> Self {
-        match positional_composition {
-            Some(PositionalComposition::Specie) => self.map(Triplet::normalize),
-            Some(PositionalComposition::Type) => self.map(Triplet::normalize),
-            None => self,
-        }
-    }
-
-    pub fn positional_species(self) -> Self {
-        self.map(Triplet::normalize)
-    }
-
-    pub fn positional_type(self) -> Self {
-        self.map(Triplet::normalize)
-    }
-
     pub fn sort(mut self, sort: Sort) -> Self {
         for value in self.0.values_mut() {
             match sort {
@@ -91,13 +73,13 @@ impl Output {
         self.0.keys().collect()
     }
 
-    fn triplets(&self) -> Vec<&Triplet> {
+    fn compositions(&self) -> Vec<&Composition> {
         self.0.values().flat_map(IndexMap::keys).unique().collect()
     }
 }
 
 impl Deref for Output {
-    type Target = IndexMap<Specie, IndexMap<Triplet, f64>>;
+    type Target = IndexMap<Specie, IndexMap<Composition, f64>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -105,9 +87,9 @@ impl Deref for Output {
 }
 
 // impl IntoIterator for Output {
-//     type Item = (Specie, IndexMap<Triplet, f64>);
+//     type Item = (Specie, IndexMap<Tags, f64>);
 
-//     type IntoIter = IntoIter<Specie, IndexMap<Triplet, f64>>;
+//     type IntoIter = IntoIter<Specie, IndexMap<Tags, f64>>;
 
 //     fn into_iter(self) -> Self::IntoIter {
 //         self.0.into_iter()
@@ -115,9 +97,9 @@ impl Deref for Output {
 // }
 
 // impl<'a> IntoIterator for &'a mut Output {
-//     type Item = (&'a Specie, &'a mut IndexMap<Triplet, f64>);
+//     type Item = (&'a Specie, &'a mut IndexMap<Tags, f64>);
 
-//     type IntoIter = IterMut<'a, Specie, IndexMap<Triplet, f64>>;
+//     type IntoIter = IterMut<'a, Specie, IndexMap<Tags, f64>>;
 
 //     fn into_iter(self) -> Self::IntoIter {
 //         self.0.iter_mut()
@@ -125,13 +107,15 @@ impl Deref for Output {
 // }
 
 impl<'a> IntoIterator for &'a Output {
-    type Item = (&'a Specie, &'a IndexMap<Triplet, f64>);
+    type Item = (&'a Specie, &'a IndexMap<Composition, f64>);
 
-    type IntoIter = Iter<'a, Specie, IndexMap<Triplet, f64>>;
+    type IntoIter = Iter<'a, Specie, IndexMap<Composition, f64>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
     }
 }
 
-mod widgets;
+mod list;
+mod plot;
+mod table;

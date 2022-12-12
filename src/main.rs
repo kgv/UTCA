@@ -8,8 +8,8 @@
 use app::App;
 use input::Input;
 use output::Output;
-use taxonomy::Taxonomy;
-use triplet::Triplet;
+use specie::Specie;
+use tag::{Composition, Tag};
 use visitor::Visitor;
 
 // When compiling natively:
@@ -53,6 +53,6 @@ pub mod utils;
 
 mod app;
 mod input;
-mod taxonomy;
-mod triplet;
+mod specie;
+mod tag;
 mod visitor;

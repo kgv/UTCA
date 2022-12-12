@@ -1,4 +1,4 @@
-use crate::taxonomy::Specie;
+use crate::Specie;
 use anyhow::Error;
 use indexmap::IndexMap;
 use inflector::Inflector;
@@ -9,7 +9,7 @@ use toml_edit::{visit::*, Document, Item};
 pub struct Visitor<'a> {
     taxonomy: Vec<&'a str>,
     result: IndexMap<Specie, IndexMap<String, Vec<f64>>>,
-    errors: Vec<Error>
+    errors: Vec<Error>,
 }
 
 impl Visitor<'_> {

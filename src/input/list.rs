@@ -1,4 +1,4 @@
-use crate::{taxonomy::Taxonomy, utils::UiExt, Input};
+use crate::{utils::UiExt, Input};
 use egui::{
     CollapsingHeader, Direction, Layout, Response, RichText, ScrollArea, TextStyle, Ui, Widget,
     Window,
@@ -8,17 +8,18 @@ use serde::{Deserialize, Serialize};
 
 /// List
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct ListWidget {
-    pub(crate) data: Option<Input>,
+pub struct List {
+    pub(crate) input: Option<Input>,
+
     pub(crate) edit: bool,
     pub(crate) expand: Option<bool>,
     pub(crate) info: bool,
 }
 
-impl Widget for &mut ListWidget {
+impl Widget for &mut List {
     fn ui(self, ui: &mut Ui) -> Response {
         let response = ui.vertical_centered(|ui| ui.heading("Input")).response;
-        if let Some(data) = &mut self.data {
+        if let Some(data) = &mut self.input {
             let size = TextStyle::Body.resolve(ui.style()).size * 1.5;
             let species = data.species();
             let fatty_acids = data.fatty_acids();
@@ -26,7 +27,7 @@ impl Widget for &mut ListWidget {
                 .auto_shrink([false; 2])
                 .show(ui, |ui| {
                     for specie in &species {
-                        CollapsingHeader::new(RichText::from(specie.name()).heading())
+                        CollapsingHeader::new(RichText::from(specie.to_string()).heading())
                             .open(self.expand)
                             .show(ui, |ui| {
                                 TableBuilder::new(ui)
