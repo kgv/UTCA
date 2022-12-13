@@ -1,4 +1,4 @@
-use crate::{Composition, Output, Specie, Tag};
+use crate::{Tags, Output, Specie, Tag};
 use indexmap::{
     map::{IntoIter, Iter, IterMut},
     IndexMap,

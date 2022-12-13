@@ -1,18 +1,17 @@
 #![feature(default_free_fn)]
-#![feature(btree_drain_filter)]
+#![feature(try_blocks)]
 #![feature(type_name_of_val)]
-#![feature(let_chains)]
-#![feature(option_get_or_insert_default)]
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 use app::App;
+use config::Config;
 use input::Input;
 use output::Output;
 use specie::Specie;
-use tag::{Composition, Tag};
+use tag::{Tag, Tags};
 use visitor::Visitor;
 
-// When compiling natively:
+// When compiling natively
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
     // Log to stdout (if you run with `RUST_LOG=debug`).
@@ -26,7 +25,7 @@ fn main() {
     );
 }
 
-// when compiling to web using trunk.
+// When compiling to web using trunk
 #[cfg(target_arch = "wasm32")]
 fn main() {
     // Make sure panics are logged using `console.error`.
@@ -47,12 +46,11 @@ fn main() {
     });
 }
 
-pub mod config;
-pub mod output;
-pub mod utils;
-
 mod app;
+mod config;
 mod input;
+mod output;
 mod specie;
 mod tag;
+mod utils;
 mod visitor;

@@ -1,31 +1,21 @@
-use crate::{
-    app::Filter,
-    config::{PositionalComposition, Sort},
-    tag::Pattern,
-    utils::{FloatExt, UiExt},
-    Input, Output, Specie, Tag,
-};
-use egui::{Align, Grid, Layout, Response, ScrollArea, TextStyle, Ui, Widget};
-use egui_extras::{Column, Size, TableBuilder};
-use indexmap::IndexMap;
-use itertools::Itertools;
+use crate::{Config, Output};
+use egui::{Grid, Layout, ScrollArea, TextStyle, Ui};
+use egui_extras::{Column, TableBuilder};
 use serde::{Deserialize, Serialize};
-use std::{default::default, ops::Bound};
-use tracing::error;
 
 /// Table UI
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Table {
     pub output: Output,
-    pub filter: Filter,
+    pub config: Config,
 }
 
 impl Table {
     pub fn ui(&mut self, ui: &mut Ui) {
         let size = 1.5 * TextStyle::Body.resolve(ui.style()).size;
-        let filtered = self.filter.filtered(self.output.clone());
-        let species = filtered.species();
-        let tags = filtered.compositions();
+        let configured = self.output.clone().configure(&self.config);
+        let species = configured.species();
+        let tags = configured.tags();
         ScrollArea::both().auto_shrink([false; 2]).show(ui, |ui| {
             TableBuilder::new(ui)
                 .resizable(true)
@@ -42,7 +32,7 @@ impl Table {
                                 // ui.heading(format!("ℹ {}", specie.taxonomy(".")));
                                 Grid::new("").show(ui, |ui| {
                                     let triglycerides = &self.output[specie];
-                                    let filtered = &filtered[specie];
+                                    let filtered = &configured[specie];
                                     ui.heading("Minor");
                                     ui.heading("Major");
                                     ui.heading("∑");
@@ -67,18 +57,18 @@ impl Table {
                     }
                 })
                 .body(|mut body| {
-                    for &composition in &tags {
+                    for &tags in &tags {
                         body.row(size, |mut row| {
                             row.col(|ui| {
-                                if self.filter.positional_composition.is_none() {
-                                    ui.label(composition.to_string());
+                                if self.config.composition.is_none() {
+                                    ui.label(tags.to_string());
                                 } else {
-                                    ui.label(format!("{composition:#}"));
+                                    ui.label(format!("{tags:#}"));
                                 }
                             });
                             for &specie in &species {
                                 row.col(|ui| {
-                                    if let Some(value) = filtered.0[specie].get(composition) {
+                                    if let Some(value) = configured.0[specie].get(tags) {
                                         ui.label(format!("{value:.4}%"));
                                     } else {
                                         ui.label("-");

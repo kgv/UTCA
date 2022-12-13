@@ -1,55 +1,31 @@
-use crate::{
-    app::Filter,
-    config::{PositionalComposition, Sort},
-    tag::{self, Composition, Pattern},
-    utils::{FloatExt, UiExt},
-    Input, Output, Specie, Tag,
-};
-use egui::{
-    collapsing_header::CollapsingState,
-    plot::{Bar, BarChart, Legend, Plot},
-    pos2, Align, CollapsingHeader, Context, Grid, Id, Layout, Pos2, Response, RichText, ScrollArea,
-    TextStyle, Ui, Widget, Window,
-};
-use egui_extras::{Size, TableBuilder};
-use indexmap::IndexMap;
-use itertools::Itertools;
+use crate::{Config, Output};
+use egui::{CollapsingHeader, Grid, RichText, ScrollArea, Ui};
 use serde::{Deserialize, Serialize};
-use std::{
-    cmp::Ordering,
-    collections::{BTreeMap, HashMap},
-    default::default,
-    fmt::Display,
-    hash::Hash,
-    ops::{Bound, RangeInclusive, Sub},
-};
-use tracing::{error, warn};
 
 /// List UI
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct List {
     pub output: Output,
-
-    pub filter: Filter,
+    pub config: Config,
     pub expand: Option<bool>,
 }
 
 impl List {
     pub fn ui(&mut self, ui: &mut Ui) {
-        let filtered = self.filter.filtered(self.output.clone());
+        let configured = self.output.clone().configure(&self.config);
         ScrollArea::vertical()
             .auto_shrink([false; 2])
             .show(ui, |ui| {
-                for (specie, value) in &filtered {
+                for (specie, value) in &configured {
                     CollapsingHeader::new(RichText::from(specie.to_string()).heading())
                         .open(self.expand)
                         .show(ui, |ui| {
                             Grid::new("").show(ui, |ui| {
-                                for (composition, &value) in value {
-                                    if self.filter.positional_composition.is_none() {
-                                        ui.label(composition.to_string());
+                                for (tags, &value) in value {
+                                    if self.config.composition.is_none() {
+                                        ui.label(tags.to_string());
                                     } else {
-                                        ui.label(format!("{composition:#}"));
+                                        ui.label(format!("{tags:#}"));
                                     }
                                     ui.label(format!("{value:.4}%"))
                                         .on_hover_text(value.to_string());
@@ -61,7 +37,7 @@ impl List {
                         .on_hover_ui(|ui| {
                             Grid::new("").show(ui, |ui| {
                                 let triglycerides = &self.output[specie];
-                                let filtered = &filtered[specie];
+                                let filtered = &configured[specie];
                                 ui.heading("Minor");
                                 ui.heading("Major");
                                 ui.heading("∑");

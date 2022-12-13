@@ -8,17 +8,17 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-/// Composition
+/// Tags
 #[derive(Clone, Debug, Default, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
-pub struct Composition(BTreeSet<Tag>);
+pub struct Tags(BTreeSet<Tag>);
 
-impl Composition {
+impl Tags {
     pub fn new(tags: BTreeSet<Tag>) -> Self {
         Self(tags)
     }
 }
 
-impl Deref for Composition {
+impl Deref for Tags {
     type Target = BTreeSet<Tag>;
 
     fn deref(&self) -> &Self::Target {
@@ -26,7 +26,7 @@ impl Deref for Composition {
     }
 }
 
-impl Display for Composition {
+impl Display for Tags {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         for (index, tag) in self.0.iter().enumerate() {
             if index != 0 {
@@ -38,13 +38,13 @@ impl Display for Composition {
     }
 }
 
-impl FromIterator<Tag> for Composition {
+impl FromIterator<Tag> for Tags {
     fn from_iter<T: IntoIterator<Item = Tag>>(iter: T) -> Self {
         Self(iter.into_iter().collect())
     }
 }
 
-impl IntoIterator for Composition {
+impl IntoIterator for Tags {
     type Item = Tag;
 
     type IntoIter = IntoIter<Tag>;
@@ -54,7 +54,7 @@ impl IntoIterator for Composition {
     }
 }
 
-impl<'a> IntoIterator for &'a Composition {
+impl<'a> IntoIterator for &'a Tags {
     type Item = &'a Tag;
 
     type IntoIter = Iter<'a, Tag>;
