@@ -8,8 +8,10 @@ pub struct Specie {
 }
 
 impl Specie {
-    pub fn new(taxonomy: Vec<String>) -> Self {
-        Self { taxonomy }
+    pub fn new() -> Self {
+        Self {
+            taxonomy: Vec::new(),
+        }
     }
 
     pub fn taxonomy(&self, sep: &str) -> String {
@@ -23,6 +25,12 @@ impl Display for Specie {
             write!(f, "{specie}")?;
         }
         Ok(())
+    }
+}
+
+impl From<Vec<String>> for Specie {
+    fn from(taxonomy: Vec<String>) -> Self {
+        Self { taxonomy }
     }
 }
 

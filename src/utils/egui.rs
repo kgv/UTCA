@@ -1,6 +1,21 @@
 use eframe::emath::Numeric;
-use egui::{DragValue, Response, Sense, Ui, Vec2, Widget};
+use egui::{collapsing_header::CollapsingState, DragValue, Response, Sense, Ui, Vec2, Widget};
 
+/// Extension methods for [`CollapsingState`]
+pub(crate) trait CollapsingStateExt {
+    fn open(self, open: Option<bool>) -> Self;
+}
+
+impl CollapsingStateExt for CollapsingState {
+    fn open(mut self, open: Option<bool>) -> Self {
+        if let Some(open) = open {
+            self.set_open(open);
+        }
+        self
+    }
+}
+
+/// Extension methods for [`Ui`]
 pub(crate) trait UiExt {
     fn default_response(&mut self) -> Response;
 

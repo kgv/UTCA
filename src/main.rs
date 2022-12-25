@@ -1,5 +1,6 @@
 #![feature(default_free_fn)]
 #![feature(try_blocks)]
+#![feature(try_trait_v2)]
 #![feature(type_name_of_val)]
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
@@ -48,6 +49,7 @@ fn main() {
 
 mod app;
 mod config;
+mod dataset;
 mod input;
 mod output;
 mod specie;

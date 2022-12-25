@@ -134,6 +134,7 @@ impl App {
         if !self.files.is_empty() {
             let mut open = true;
             Window::new("Dropped files")
+                .anchor(Align2::RIGHT_BOTTOM, [0.0, 0.0])
                 .open(&mut open)
                 .show(ctx, |ui| {
                     for file in &self.files {
@@ -156,6 +157,8 @@ impl App {
     //     self.available_fatty_acids = input.fatty_acids();
     // }
 
+    fn bottom_panel(&mut self, ctx: &Context) {}
+
     fn central_panel(&mut self, ctx: &Context) {
         CentralPanel::default().show(ctx, |ui| {
             if self.files.is_empty() {
@@ -167,28 +170,27 @@ impl App {
                 );
                 return;
             }
-            ui.heading(HEADER);
-            ui.separator();
             match self.io {
-                Io::Input => {
-                    match self.input_view {
-                        InputView::List => {
-                            self.views.input.list.ui(ui);
-                            // self.input = self.widgets.input.list.input;
-                        }
-                        InputView::Text => {
-                            self.views.input.text.text = self.content.clone();
-                            self.views.input.text.ui(ui);
-                            self.content = self.views.input.text.text.clone();
-                            let input = parse(&self.content).unwrap();
-                            self.views.input.list.input = input.clone();
-                            self.views.output.list.output = input.output();
-                            self.views.output.plot.output = input.output();
-                            self.views.output.table.output = input.output();
-                            self.available_fatty_acids = input.fatty_acids();
-                        }
+                Io::Input => match self.input_view {
+                    InputView::List => {
+                        self.views.input.list.ui(ui);
+                        let input = &self.views.input.list.input;
+                        self.views.output.list.output = input.output();
+                        self.views.output.plot.output = input.output();
+                        self.views.output.table.output = input.output();
                     }
-                }
+                    InputView::Text => {
+                        self.views.input.text.text = self.content.clone();
+                        self.views.input.text.ui(ui);
+                        self.content = self.views.input.text.text.clone();
+                        let input = parse(&self.content).unwrap();
+                        self.views.input.list.input = input.clone();
+                        self.views.output.list.output = input.output();
+                        self.views.output.plot.output = input.output();
+                        self.views.output.table.output = input.output();
+                        self.available_fatty_acids = input.fatty_acids();
+                    }
+                },
                 Io::Output => match self.output_view {
                     OutputView::List => {
                         self.views.output.list.config = self.config.clone();
@@ -228,12 +230,12 @@ impl App {
                             ui.checkbox(&mut self.views.input.list.edit, "Edit");
                             ui.horizontal(|ui| {
                                 ui.selectable_value(
-                                    &mut self.views.input.list.expand,
+                                    &mut self.views.input.list.open,
                                     Some(false),
                                     "Collapse",
                                 );
                                 ui.selectable_value(
-                                    &mut self.views.input.list.expand,
+                                    &mut self.views.input.list.open,
                                     Some(true),
                                     "Expand",
                                 );
@@ -250,22 +252,20 @@ impl App {
                 }
                 ui.separator();
                 ui.horizontal(|ui| {
-                    ComboBox::from_label("Positional Composition Kind")
+                    ComboBox::from_label("Composition")
                         .selected_text(Composition::abbreviation(&self.config.composition))
                         .show_ui(ui, |ui| {
                             ui.selectable_value(&mut self.config.composition, None, "");
                             ui.selectable_value(
                                 &mut self.config.composition,
                                 Some(Composition::PositionalSpecie),
-                                "PSC",
-                            )
-                            .on_hover_text("Positional-Specie Composition");
+                                "Positional-Specie",
+                            );
                             ui.selectable_value(
                                 &mut self.config.composition,
                                 Some(Composition::PositionalType),
-                                "PTC",
-                            )
-                            .on_hover_text("Positional-Type Composition");
+                                "Positional-Type",
+                            );
                         });
                 });
                 ui.toggle_value(&mut self.views.output.plot.stacked, "☰")
@@ -378,6 +378,10 @@ impl App {
             });
         });
     }
+
+    fn windows(&mut self, ctx: &Context) {
+        // self.views.input.list.window(ctx);
+    }
 }
 
 impl eframe::App for App {
@@ -392,8 +396,10 @@ impl eframe::App for App {
         self.top_panel(ctx);
         self.left_panel(ctx);
         self.central_panel(ctx);
+        // self.bottom_panel(ctx);
+        self.windows(ctx);
         self.file_drag_and_drop_ui(ctx);
-        self.toasts.show(ctx);
+        // self.toasts.show(ctx);
     }
 }
 

@@ -20,7 +20,7 @@ impl List {
                     CollapsingHeader::new(RichText::from(specie.to_string()).heading())
                         .open(self.expand)
                         .show(ui, |ui| {
-                            Grid::new("").show(ui, |ui| {
+                            Grid::new("").striped(true).show(ui, |ui| {
                                 for (tags, &value) in value {
                                     if self.config.composition.is_none() {
                                         ui.label(tags.to_string());

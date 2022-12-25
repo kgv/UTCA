@@ -1,4 +1,4 @@
-use crate::{Tags, Output, Specie, Tag};
+use crate::{Output, Specie, Tag};
 use indexmap::{
     map::{IntoIter, Iter, IterMut},
     IndexMap,
@@ -34,8 +34,8 @@ impl Input {
                             let tag = Tag::new([key[0].clone(), key[1].clone(), key[2].clone()]);
                             let value =
                                 value[&tag[0]][0] * value[&tag[1]][1] * value[&tag[2]][0] * 0.0001;
-                            let composition = once(tag).collect();
-                            (composition, value)
+                            let tags = once(tag).collect();
+                            (tags, value)
                         })
                         .collect();
                     (key, value)

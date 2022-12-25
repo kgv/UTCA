@@ -1,5 +1,6 @@
 use std::ops::Bound;
 
+/// Extension methods for [`Bound`]
 pub(crate) trait BoundExt<T> {
     fn value(&self) -> Option<&T>;
 
